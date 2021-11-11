@@ -11,6 +11,9 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +39,7 @@ fun DotsScreen(
     onAddItem: (Dot) -> Unit,
     onRemoveItem: (Dot) -> Unit,
 ) {
+    var showDotDialog by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -43,23 +47,17 @@ fun DotsScreen(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { offset ->
-
-                        onAddItem(
-                            Dot(
-                                "Test",
-                                offset.x,
-                                offset.y,
-                                DotSize.MEDIUM,
-                                Color(0xFF8d6e63)
-                            )
-                        )
-
+                        showDotDialog = true
                     }
                 )
             }
     ) {
         DrawAreas()
         DotsBoard(items = items, onRemoveItem)
+    }
+
+    if (showDotDialog) {
+        DotDialog()
     }
 }
 

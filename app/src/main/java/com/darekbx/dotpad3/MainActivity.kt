@@ -8,12 +8,20 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.darekbx.dotpad3.navigation.NavigationItem
 import com.darekbx.dotpad3.ui.dots.DotsScreen
 import com.darekbx.dotpad3.ui.dots.DotsViewModel
 import com.darekbx.dotpad3.ui.theme.DotPad3Theme
@@ -24,15 +32,50 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
+            val navController = rememberNavController()
             this.window.statusBarColor = android.graphics.Color.BLACK
             DotPad3Theme {
                 Scaffold(
-                    bottomBar = { AppBar() },
-                    content = { DotsScreen() }
+                    bottomBar = { BottomAppBar(navController) },
+                    content = { Navigation(navController) }
                 )
             }
         }
+    }
+
+    @Composable
+    fun Navigation(navController: NavHostController) {
+        NavHost(navController, startDestination = NavigationItem.Home.route) {
+            composable(NavigationItem.Home.route) {
+                DotsScreen()
+            }
+            composable(NavigationItem.History.route) {
+                HistoryScreen()
+            }
+            composable(NavigationItem.Statistics.route) {
+                StatisticsScreen()
+            }
+            composable(NavigationItem.Calendar.route) {
+                CalendarScreen()
+            }
+        }
+    }
+
+    @Composable
+    private fun HistoryScreen() {
+        Text("History")
+    }
+
+    @Composable
+    private fun StatisticsScreen() {
+        Text("Statistics")
+    }
+
+    @Composable
+    private fun CalendarScreen() {
+        Text("Calendar")
     }
 
     @Composable
@@ -45,23 +88,50 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun AppBar() {
+    private fun BottomAppBar(navController: NavController) {
+        val items = listOf(
+            NavigationItem.Home,
+            NavigationItem.History,
+            NavigationItem.Statistics,
+            NavigationItem.Calendar
+        )
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
         Column {
             Separator()
             BottomAppBar {
                 BottomNavigation(backgroundColor = Color.Black) {
-                    NavigationItem(R.string.history, R.drawable.ic_history) {
-                        // TODO go to history
-                    }
-                    NavigationItem(R.string.statistics, R.drawable.ic_pie_chart) {
-                        // TODO go to statistics
-                    }
-                    NavigationItem(R.string.calendar, R.drawable.ic_calendar) {
-                        // TODO go to calendar
+                    items.forEach { item ->
+                        BottomNavigationItem(item, currentRoute, navController)
                     }
                 }
             }
         }
+    }
+
+    @Composable
+    private fun RowScope.BottomNavigationItem(
+        item: NavigationItem,
+        currentRoute: String?,
+        navController: NavController
+    ) {
+        BottomNavigationItem(
+            icon = { Icon(painterResource(id = item.iconResId), contentDescription = item.route) },
+            label = { Text(text = stringResource(item.labelResId)) },
+            alwaysShowLabel = false,
+            selected = currentRoute == item.route,
+            onClick = {
+                navController.navigate(item.route) {
+                    navController.graph.startDestinationRoute?.let { route ->
+                        popUpTo(route) {
+                            saveState = true
+                        }
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+        )
     }
 
     @Composable
@@ -73,21 +143,5 @@ class MainActivity : ComponentActivity() {
         ) {
             drawLine(Color.DarkGray, Offset(0F, 0F), Offset(size.width, 0F), strokeWidth = 2F)
         }
-    }
-
-    @Composable
-    private fun RowScope.NavigationItem(labelResId: Int, iconResId: Int, callback: () -> Unit) {
-        BottomNavigationItem(
-            onClick = { callback() },
-            icon = {
-                Icon(
-                    painterResource(id = iconResId),
-                    contentDescription = stringResource(id = labelResId)
-                )
-            },
-            label = { Text(text = stringResource(id = labelResId)) },
-            selected = false,
-            alwaysShowLabel = true
-        )
     }
 }
