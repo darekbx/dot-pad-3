@@ -22,8 +22,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.darekbx.dotpad3.navigation.NavigationItem
-import com.darekbx.dotpad3.ui.dots.DotsScreen
-import com.darekbx.dotpad3.ui.dots.DotsViewModel
+import com.darekbx.dotpad3.ui.dots.DotsBoardScreen
+import com.darekbx.dotpad3.viewmodel.DotsViewModel
 import com.darekbx.dotpad3.ui.theme.DotPad3Theme
 
 class MainActivity : ComponentActivity() {
@@ -80,10 +80,12 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun DotsScreen() {
-        DotsScreen(
+        DotsBoardScreen(
             items = dotsViewModel.dots,
-            onAddItem = dotsViewModel::addItem,
-            onRemoveItem = dotsViewModel::removeItem
+            onSaveItem = dotsViewModel::saveItem,
+            onRemoveItem = dotsViewModel::removeItem,
+            onShowDotDialog = dotsViewModel::showDotDialog,
+            dotDialogState = dotsViewModel.dialogState.value
         )
     }
 

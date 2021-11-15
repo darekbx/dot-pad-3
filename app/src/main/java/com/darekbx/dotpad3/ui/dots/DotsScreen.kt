@@ -34,12 +34,13 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 @Composable
-fun DotsScreen(
+fun DotsBoardScreen(
     items: List<Dot>,
-    onAddItem: (Dot) -> Unit,
+    onSaveItem: (Dot) -> Unit,
     onRemoveItem: (Dot) -> Unit,
+    onShowDotDialog: (Dot?) -> Unit,
+    dotDialogState: Boolean
 ) {
-    var showDotDialog by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -47,7 +48,7 @@ fun DotsScreen(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { offset ->
-                        showDotDialog = true
+                        onShowDotDialog(null)
                     }
                 )
             }
@@ -56,8 +57,8 @@ fun DotsScreen(
         DotsBoard(items = items, onRemoveItem)
     }
 
-    if (showDotDialog) {
-        DotDialog()
+    if (dotDialogState) {
+        DotDialog(onSaveItem, onRemoveItem)
     }
 }
 
@@ -169,5 +170,5 @@ private fun calculateTimeAgo(createdTime: Long): String {
 @Preview
 @Composable
 fun DotPreview() {
-    DotView(Dot("One", 0F, 0F, DotSize.LARGE, Color(249, 168, 37)), onRemove = { })
+    DotView(Dot(1L,"One", 0F, 0F, DotSize.LARGE, Color(249, 168, 37)), onRemove = { })
 }
