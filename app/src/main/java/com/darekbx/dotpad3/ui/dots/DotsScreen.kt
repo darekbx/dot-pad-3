@@ -1,6 +1,5 @@
 package com.darekbx.dotpad3.ui.dots
 
-import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -24,11 +23,11 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.darekbx.dotpad3.ui.theme.dotRed
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -36,9 +35,12 @@ import kotlin.math.roundToInt
 @Composable
 fun DotsBoardScreen(
     items: List<Dot>,
-    onSaveItem: (Dot) -> Unit,
-    onRemoveItem: (Dot) -> Unit,
-    onShowDotDialog: (Dot?) -> Unit,
+    selectedDot: Dot?,
+    onSave: (Dot) -> Unit,
+    onResetTime: (Dot) -> Unit,
+    onAddReminder: (Dot) -> Unit,
+    onRemove: (Dot) -> Unit,
+    onSelectDot: (Dot) -> Unit,
     dotDialogState: Boolean
 ) {
     Box(
@@ -48,17 +50,18 @@ fun DotsBoardScreen(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { offset ->
-                        onShowDotDialog(null)
+                        val dot = Dot(null, "", offset.x, offset.y, DotSize.MEDIUM, dotRed)
+                        onSelectDot(dot)
                     }
                 )
             }
     ) {
         DrawAreas()
-        DotsBoard(items = items, onRemoveItem)
+        DotsBoard(items = items, onRemove, onSelectDot)
     }
 
-    if (dotDialogState) {
-        DotDialog(onSaveItem, onRemoveItem)
+    if (dotDialogState && selectedDot != null) {
+        DotDialog(selectedDot, onSave, onResetTime, onAddReminder, onRemove)
     }
 }
 
@@ -78,21 +81,20 @@ private fun DrawAreas() {
 }
 
 @Composable
-fun DotsBoard(items: List<Dot>, onRemoveItem: (Dot) -> Unit) {
+fun DotsBoard(items: List<Dot>, onRemove: (Dot) -> Unit, onSelectDot: (Dot) -> Unit) {
     for (item in items) {
-        DotView(item, onRemove = {
-            onRemoveItem(item)
-        })
+        DotView(item,
+            onRemove = { onRemove(item) },
+            onSelectDot = { onSelectDot(it) }
+        )
     }
 }
 
 @Composable
-fun DotView(dot: Dot, onRemove: () -> Unit) {
+fun DotView(dot: Dot, onRemove: () -> Unit, onSelectDot: (Dot) -> Unit) {
     val offsetX = rememberSaveable(dot) { mutableStateOf(dot.x) }
     val offsetY = rememberSaveable(dot) { mutableStateOf(dot.y) }
     val size = mapDotSize(dot)
-
-    val context = LocalContext.current
 
     Box(
         Modifier
@@ -102,11 +104,7 @@ fun DotView(dot: Dot, onRemove: () -> Unit) {
             .size(size)
             .pointerInput(dot) {
                 detectTapGestures(
-                    onTap = {
-                        Toast
-                            .makeText(context, dot.text, Toast.LENGTH_SHORT)
-                            .show()
-                    },
+                    onTap = { onSelectDot(dot) },
                     onLongPress = { onRemove() }
                 )
             }
@@ -170,5 +168,5 @@ private fun calculateTimeAgo(createdTime: Long): String {
 @Preview
 @Composable
 fun DotPreview() {
-    DotView(Dot(1L,"One", 0F, 0F, DotSize.LARGE, Color(249, 168, 37)), onRemove = { })
+    DotView(Dot(1L,"One", 0F, 0F, DotSize.LARGE, Color(249, 168, 37)), onRemove = { }, { })
 }

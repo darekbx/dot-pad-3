@@ -82,9 +82,12 @@ class MainActivity : ComponentActivity() {
     private fun DotsScreen() {
         DotsBoardScreen(
             items = dotsViewModel.dots,
-            onSaveItem = dotsViewModel::saveItem,
-            onRemoveItem = dotsViewModel::removeItem,
-            onShowDotDialog = dotsViewModel::showDotDialog,
+            selectedDot = dotsViewModel.selectedDot.value,
+            onSave = dotsViewModel::saveItem,
+            onResetTime = dotsViewModel::resetTime,
+            onAddReminder = dotsViewModel::addReminder,
+            onRemove = dotsViewModel::removeItem,
+            onSelectDot = dotsViewModel::selectDot,
             dotDialogState = dotsViewModel.dialogState.value
         )
     }

@@ -5,11 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,25 +27,33 @@ private val colors = listOf(
 
 @Composable
 fun DotDialog(
-    onSaveItem: (Dot) -> Unit,
-    onRemoveItem: (Dot) -> Unit
+    dot: Dot,
+    onSave: (Dot) -> Unit,
+    onResetTime: (Dot) -> Unit,
+    onAddReminder: (Dot) -> Unit,
+    onRemove: (Dot) -> Unit
 ) {
-    Dialog(onDismissRequest = { /*TODO*/ }) {
-        DialogContent(
-            Dot(null,"", 0F, 0F, DotSize.MEDIUM, Color.Black),
-            onSaveItem,
-            onRemoveItem
-        )
+    Dialog(onDismissRequest = { }) {
+        DialogContent(dot, onSave, onResetTime, onAddReminder, onRemove)
     }
 }
 
 @Composable
 fun DialogContent(
     dot: Dot,
-    onSaveItem: (Dot) -> Unit,
-    onRemoveItem: (Dot) -> Unit
+    onSave: (Dot) -> Unit,
+    onResetTime: (Dot) -> Unit,
+    onAddReminder: (Dot) -> Unit,
+    onRemove: (Dot) -> Unit
 ) {
-    var dotText by remember { mutableStateOf("One\nTwo\nThree\nFour\nFive\nSix\nSeven\nEight\nNine\nTen\nEleven") }
+
+    val (text, onTextChange) = rememberSaveable { mutableStateOf(dot.text) }
+    val submit = {
+        dot.text = text
+        // TODO presist other values
+        onSave(dot)
+    }
+
     Card(
         elevation = 8.dp,
         shape = RoundedCornerShape(8.dp)
@@ -63,7 +68,7 @@ fun DialogContent(
                 Modifier
                     .fillMaxWidth()
                     .fillMaxHeight()) {
-                DotMessage(dot)
+                DotMessage(text, onTextChange)
 
                 Row(
                     Modifier
@@ -80,19 +85,19 @@ fun DialogContent(
                 DotSizes(dot)
 
                 if (dot.isNew) {
-                    NewDotButtons(onSaveItem, dot)
+                    NewDotButtons(submit, onAddReminder, dot)
                 } else {
-                    EditDotButtons(onSaveItem, dot)
+                    EditDotButtons(submit, onResetTime, onAddReminder, onRemove, dot)
                 }
             }
-
         }
     }
 }
 
 @Composable
 private fun NewDotButtons(
-    onSaveItem: (Dot) -> Unit,
+    onSave: () -> Unit,
+    onAddReminder: (Dot) -> Unit,
     dot: Dot
 ) {
     Row(
@@ -107,19 +112,22 @@ private fun NewDotButtons(
                 .size(44.dp)
                 .padding(end = 4.dp),
             colors = ButtonDefaults.buttonColors(backgroundColor = dotTeal),
-            onClick = { onSaveItem(dot) }) { }
+            onClick = { onSave() }) { }
         Button(
             modifier = Modifier
                 .weight(2F, true)
                 .height(44.dp),
             colors = ButtonDefaults.buttonColors(backgroundColor = dotPurple),
-            onClick = { onSaveItem(dot) }) { }
+            onClick = { onAddReminder(dot) }) { }
     }
 }
 
 @Composable
 private fun EditDotButtons(
-    onSaveItem: (Dot) -> Unit,
+    onSave: () -> Unit,
+    onResetTime: (Dot) -> Unit,
+    onAddReminder: (Dot) -> Unit,
+    onRemove: (Dot) -> Unit,
     dot: Dot
 ) {
     Row(
@@ -133,23 +141,23 @@ private fun EditDotButtons(
             modifier = Modifier
                 .size(44.dp),
             colors = ButtonDefaults.buttonColors(backgroundColor = dotRed),
-            onClick = { onSaveItem(dot) }) { }
+            onClick = { onRemove(dot) }) { }
         Button(
             modifier = Modifier
                 .width(140.dp)
                 .height(44.dp),
             colors = ButtonDefaults.buttonColors(backgroundColor = dotTeal),
-            onClick = { onSaveItem(dot) }) { }
+            onClick = { onSave() }) { }
         Button(
             modifier = Modifier
                 .size(44.dp),
             colors = ButtonDefaults.buttonColors(backgroundColor = dotOrange),
-            onClick = { onSaveItem(dot) }) { }
+            onClick = { onResetTime(dot) }) { }
         Button(
             modifier = Modifier
                 .size(44.dp),
             colors = ButtonDefaults.buttonColors(backgroundColor = dotPurple),
-            onClick = { onSaveItem(dot) }) { }
+            onClick = { onAddReminder(dot) }) { }
     }
 }
 
@@ -229,7 +237,7 @@ private fun ReminderInfo(dot: Dot) {
 }
 
 @Composable
-private fun DotMessage(dot: Dot) {
+private fun DotMessage(text: String, onTextChange: (String) -> Unit) {
     BasicTextField(
         modifier = Modifier
             .height(168.dp)
@@ -238,20 +246,20 @@ private fun DotMessage(dot: Dot) {
         textStyle = Typography.h6,
         decorationBox = { innerTextField ->
             Row(modifier = Modifier.fillMaxWidth()) {
-                if (dot.text.isEmpty()) {
+                if (text.isEmpty()) {
                     Text("Enter note", color = Color.Gray)
                 }
             }
 
             innerTextField()
         },
-        value = dot.text,
-        onValueChange = { dot.text = it },
+        value = text,
+        onValueChange = onTextChange,
     )
 }
 
 @Preview
 @Composable
 fun DialogPreview() {
-    DialogContent(Dot(1L,"", 0F, 0F, DotSize.MEDIUM, Color.Black), { }, { })
+    DialogContent(Dot(1L,"", 0F, 0F, DotSize.MEDIUM, Color.Black), { }, { }, { }, { })
 }
