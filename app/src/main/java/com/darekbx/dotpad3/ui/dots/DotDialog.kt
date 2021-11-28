@@ -11,10 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.darekbx.dotpad3.R
 import com.darekbx.dotpad3.ui.theme.*
+import com.darekbx.dotpad3.utils.TimeUtils
 
 private val colors = listOf(
     dotRed,
@@ -163,8 +167,6 @@ private fun EditDotButtons(
 
 @Composable
 private fun DotColors(dot: Dot) {
-    // TODO select existing dot color
-    // TODO mark selected color
     Row(
         Modifier
             .fillMaxWidth()
@@ -176,16 +178,19 @@ private fun DotColors(dot: Dot) {
                 modifier = Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(color)
-            )
+                    .background(color),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                if (color == dot.color) {
+                    Checkmark()
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun DotSizes(dot: Dot) {
-    // TODO select existing dot size
-    // TODO mark selected size
     Row(
         Modifier
             .fillMaxWidth()
@@ -199,16 +204,32 @@ private fun DotSizes(dot: Dot) {
                     .size(44.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .background(Color(0xFF505050)),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.TopEnd
             ) {
                 Text(
+                    modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(top = 14.dp),
                     text = "${size.size}",
-                    style = Typography.h6.copy(color = LightGrey),
+                    style = Typography.h6.copy(color = LightGrey, textAlign = TextAlign.Center),
                     color = Color.LightGray
                 )
+                if (size == dot.size) {
+                    Checkmark()
+                }
             }
         }
     }
+}
+
+@Composable
+private fun Checkmark() {
+    Icon(
+        modifier = Modifier
+            .padding(4.dp)
+            .size(12.dp),
+        painter = painterResource(id = R.drawable.ic_check),
+        tint = Color.White,
+        contentDescription = "check_mark"
+    )
 }
 
 @Composable
@@ -230,9 +251,15 @@ private fun StickedInfo(dot: Dot) {
 @Composable
 private fun ReminderInfo(dot: Dot) {
     // TODO set reminder
+
+    val text = if (dot.reminder != null) {
+        TimeUtils.formattedDate(dot.reminder)
+    } else {
+        "No reminder"
+    }
     Text(
         style = Typography.h6.copy(color = LightGrey),
-        text = "No reminder"
+        text = text
     )
 }
 
@@ -261,5 +288,8 @@ private fun DotMessage(text: String, onTextChange: (String) -> Unit) {
 @Preview
 @Composable
 fun DialogPreview() {
-    DialogContent(Dot(1L,"", 0F, 0F, DotSize.MEDIUM, Color.Black), { }, { }, { }, { })
+    DialogContent(Dot(
+        1L, "", 0F, 0F, DotSize.MEDIUM, dotTeal, isSticked = true, createdDate = 1636109037074L,
+        reminder = 1636109037074L + 51 * 60 * 1000
+    ), { }, { }, { }, { })
 }

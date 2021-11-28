@@ -10,12 +10,10 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -28,7 +26,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.darekbx.dotpad3.ui.theme.dotRed
-import java.util.concurrent.TimeUnit
+import com.darekbx.dotpad3.utils.TimeUtils
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -100,6 +98,7 @@ fun DotView(dot: Dot, onRemove: () -> Unit, onSelectDot: (Dot) -> Unit) {
         Modifier
             .offset { IntOffset(offsetX.value.roundToInt(), offsetY.value.roundToInt()) }
             .clip(CircleShape)
+            .alpha(if (dot.isSticked) 0.5F else 1F)
             .background(dot.color)
             .size(size)
             .pointerInput(dot) {
@@ -125,7 +124,7 @@ fun DotView(dot: Dot, onRemove: () -> Unit, onSelectDot: (Dot) -> Unit) {
 
 @Composable
 private fun DotText(dot: Dot) {
-    val timeAgo = rememberSaveable(dot) {calculateTimeAgo(dot.createdDate)}
+    val timeAgo = rememberSaveable(dot) { TimeUtils.calculateTimeAgo(dot.createdDate) }
     Text(text = timeAgo, color = Color.White, fontSize = 5.sp)
 }
 
@@ -154,19 +153,10 @@ private fun mapDotSize(dot: Dot) = when (dot.size) {
     DotSize.HUGE -> 80.dp
 }
 
-private fun calculateTimeAgo(createdTime: Long): String {
-    val currentTime = System.currentTimeMillis()
-    val diff = (currentTime - createdTime)
-    return when {
-        diff < TimeUnit.MINUTES.toMillis(1) -> "${TimeUnit.MILLISECONDS.toSeconds(diff)}s"
-        diff < TimeUnit.HOURS.toMillis(1) -> "${TimeUnit.MILLISECONDS.toMinutes(diff)}m"
-        diff < TimeUnit.DAYS.toMillis(1) -> "${TimeUnit.MILLISECONDS.toHours(diff)}h"
-        else -> "${TimeUnit.MILLISECONDS.toDays(diff)}d"
-    }
-}
-
 @Preview
 @Composable
 fun DotPreview() {
-    DotView(Dot(1L,"One", 0F, 0F, DotSize.LARGE, Color(249, 168, 37)), onRemove = { }, { })
+    DotView(Dot(1L,"One", 0F, 0F, DotSize.LARGE, dotRed, isSticked = false,
+        createdDate = 1636109037074L,
+        reminder = 1636109037074L + 51 * 60 * 1000), onRemove = { }, { })
 }
