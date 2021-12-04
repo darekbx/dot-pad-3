@@ -1,6 +1,7 @@
 package com.darekbx.dotpad3.ui.dots
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -14,8 +15,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.darekbx.dotpad3.R
 import com.darekbx.dotpad3.ui.theme.*
 import com.darekbx.dotpad3.utils.TimeUtils
@@ -34,11 +37,16 @@ fun DotDialog(
     dot: Dot,
     onSave: (Dot) -> Unit,
     onResetTime: (Dot) -> Unit,
-    onAddReminder: (Dot) -> Unit,
-    onRemove: (Dot) -> Unit
+    onShowDatePicker: () -> Unit,
+    onShowTimePicker: () -> Unit,
+    onRemove: (Dot) -> Unit,
+    onDiscardChanges: () -> Unit
 ) {
-    Dialog(onDismissRequest = { }) {
-        DialogContent(dot, onSave, onResetTime, onAddReminder, onRemove)
+    Dialog(
+        onDismissRequest = { onDiscardChanges() },
+        properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
+    ) {
+        DialogContent(dot, onSave, onResetTime, onShowDatePicker, onShowTimePicker, onRemove)
     }
 }
 
@@ -47,13 +55,21 @@ fun DialogContent(
     dot: Dot,
     onSave: (Dot) -> Unit,
     onResetTime: (Dot) -> Unit,
-    onAddReminder: (Dot) -> Unit,
+    onShowDatePicker: () -> Unit,
+    onShowTimePicker: () -> Unit,
     onRemove: (Dot) -> Unit
 ) {
 
     val (text, onTextChange) = rememberSaveable { mutableStateOf(dot.text) }
+    val (size, onSizeChange) = rememberSaveable { mutableStateOf(dot.size) }
+    val (color, onColorChange) = rememberSaveable { mutableStateOf(dot.color) }
+    val (isSticked, onStickedChange) = rememberSaveable { mutableStateOf(dot.isSticked) }
+
     val submit = {
         dot.text = text
+        dot.size = size
+        dot.color = color
+        dot.isSticked = isSticked
         // TODO presist other values
         onSave(dot)
     }
@@ -71,7 +87,8 @@ fun DialogContent(
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight()) {
+                    .fillMaxHeight()
+            ) {
                 DotMessage(text, onTextChange)
 
                 Row(
@@ -82,16 +99,16 @@ fun DialogContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ReminderInfo(dot)
-                    StickedInfo(dot)
+                    StickedInfo(isSticked, onStickedChange)
                 }
 
-                DotColors(dot)
-                DotSizes(dot)
+                DotColors(color, onColorChange)
+                DotSizes(size, onSizeChange)
 
                 if (dot.isNew) {
-                    NewDotButtons(submit, onAddReminder, dot)
+                    NewDotButtons(submit, onShowDatePicker)
                 } else {
-                    EditDotButtons(submit, onResetTime, onAddReminder, onRemove, dot)
+                    EditDotButtons(submit, onResetTime, onShowDatePicker, onRemove, dot)
                 }
             }
         }
@@ -101,8 +118,7 @@ fun DialogContent(
 @Composable
 private fun NewDotButtons(
     onSave: () -> Unit,
-    onAddReminder: (Dot) -> Unit,
-    dot: Dot
+    onAddReminder: () -> Unit
 ) {
     Row(
         Modifier
@@ -112,17 +128,12 @@ private fun NewDotButtons(
 
         Button(
             modifier = Modifier
-                .weight(1F)
-                .size(44.dp)
+                .height(44.dp)
+                .fillMaxWidth(0.85F)
                 .padding(end = 4.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = dotTeal),
+            colors = ButtonDefaults.buttonColors(backgroundColor = dotTeal.toColor()),
             onClick = { onSave() }) { }
-        Button(
-            modifier = Modifier
-                .weight(2F, true)
-                .height(44.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = dotPurple),
-            onClick = { onAddReminder(dot) }) { }
+        SquareButton({ onAddReminder() }, dotPurple)
     }
 }
 
@@ -130,7 +141,7 @@ private fun NewDotButtons(
 private fun EditDotButtons(
     onSave: () -> Unit,
     onResetTime: (Dot) -> Unit,
-    onAddReminder: (Dot) -> Unit,
+    onAddReminder: () -> Unit,
     onRemove: (Dot) -> Unit,
     dot: Dot
 ) {
@@ -138,35 +149,31 @@ private fun EditDotButtons(
         Modifier
             .fillMaxWidth()
             .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-
-        Button(
-            modifier = Modifier
-                .size(44.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = dotRed),
-            onClick = { onRemove(dot) }) { }
-        Button(
-            modifier = Modifier
-                .width(140.dp)
-                .height(44.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = dotTeal),
-            onClick = { onSave() }) { }
-        Button(
-            modifier = Modifier
-                .size(44.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = dotOrange),
-            onClick = { onResetTime(dot) }) { }
-        Button(
-            modifier = Modifier
-                .size(44.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = dotPurple),
-            onClick = { onAddReminder(dot) }) { }
+        SquareButton({ onRemove(dot) }, dotRed)
+        SquareButton({ onSave() }, dotTeal, width = 140.dp)
+        SquareButton({ onResetTime(dot) }, dotOrange)
+        SquareButton({ onAddReminder() }, dotPurple)
     }
 }
 
 @Composable
-private fun DotColors(dot: Dot) {
+private fun SquareButton(
+    onClick: () -> Unit,
+    color: DotColor,
+    width: Dp = 44.dp
+) {
+    Button(
+        modifier = Modifier
+            .height(44.dp)
+            .width(width),
+        colors = ButtonDefaults.buttonColors(backgroundColor = color.toColor()),
+        onClick = { onClick() }) { }
+}
+
+@Composable
+private fun DotColors(dotColor: DotColor?, onColorChange: (DotColor) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -178,10 +185,11 @@ private fun DotColors(dot: Dot) {
                 modifier = Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(color),
+                    .clickable { onColorChange(color) }
+                    .background(color.toColor()),
                 contentAlignment = Alignment.TopEnd
             ) {
-                if (color == dot.color) {
+                if (color.equalsColor(dotColor)) {
                     Checkmark()
                 }
             }
@@ -190,7 +198,7 @@ private fun DotColors(dot: Dot) {
 }
 
 @Composable
-private fun DotSizes(dot: Dot) {
+private fun DotSizes(dotSize: DotSize?, onSizeChange: (DotSize) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -203,16 +211,20 @@ private fun DotSizes(dot: Dot) {
                     .padding(start = 4.dp)
                     .size(44.dp)
                     .clip(RoundedCornerShape(4.dp))
+                    .clickable { onSizeChange(size) }
                     .background(Color(0xFF505050)),
                 contentAlignment = Alignment.TopEnd
             ) {
                 Text(
-                    modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(top = 14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .padding(top = 14.dp),
                     text = "${size.size}",
                     style = Typography.h6.copy(color = LightGrey, textAlign = TextAlign.Center),
                     color = Color.LightGray
                 )
-                if (size == dot.size) {
+                if (size == dotSize) {
                     Checkmark()
                 }
             }
@@ -233,7 +245,7 @@ private fun Checkmark() {
 }
 
 @Composable
-private fun StickedInfo(dot: Dot) {
+private fun StickedInfo(dotIsSticked: Boolean, onStickedChanged: (Boolean) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -243,20 +255,15 @@ private fun StickedInfo(dot: Dot) {
         )
         Checkbox(
             modifier = Modifier.padding(start = 4.dp),
-            checked = dot.isSticked,
-            onCheckedChange = { })
+            checked = dotIsSticked,
+            onCheckedChange = { onStickedChanged(it) })
     }
 }
 
 @Composable
 private fun ReminderInfo(dot: Dot) {
-    // TODO set reminder
-
-    val text = if (dot.reminder != null) {
-        TimeUtils.formattedDate(dot.reminder)
-    } else {
-        "No reminder"
-    }
+    val text = dot.reminder?.let { TimeUtils.formattedDate(it) }
+        ?: "No reminder"
     Text(
         style = Typography.h6.copy(color = LightGrey),
         text = text
@@ -291,5 +298,5 @@ fun DialogPreview() {
     DialogContent(Dot(
         1L, "", 0F, 0F, DotSize.MEDIUM, dotTeal, isSticked = true, createdDate = 1636109037074L,
         reminder = 1636109037074L + 51 * 60 * 1000
-    ), { }, { }, { }, { })
+    ), { }, { }, { }, { }, { })
 }

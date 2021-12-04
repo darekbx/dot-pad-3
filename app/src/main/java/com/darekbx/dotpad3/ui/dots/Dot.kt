@@ -1,23 +1,28 @@
 package com.darekbx.dotpad3.ui.dots
 
 import androidx.compose.ui.graphics.Color
+import java.io.Serializable
 
 data class Dot(
     var id: Long? = null,
     var text: String,
     var x: Float,
     var y: Float,
-    val size: DotSize,
-    val color: Color,
+    var size: DotSize? = null,
+    var color: DotColor? = null,
     var createdDate: Long = System.currentTimeMillis(),
     var isArchived: Boolean = false,
     var isSticked: Boolean = false,
-    val reminder: Long? = null,
+    var reminder: Long? = null,
     var calendarEventId: Long? = null,
     var calendarReminderId: Long? = null
 ) {
 
     val isNew = id == null
+
+    fun requireSize(): DotSize = size ?: throw IllegalStateException("Size is null")
+
+    fun requireColor(): DotColor = color ?: throw IllegalStateException("Color is null")
 }
 
 enum class DotSize(val size: Int) {
@@ -26,3 +31,14 @@ enum class DotSize(val size: Int) {
     LARGE(8),
     HUGE(10)
 }
+
+class DotColor(val r: Float, val g: Float, val b: Float) : Serializable {
+
+    fun equalsColor(other: DotColor?): Boolean {
+        if (other == null) return false
+        return other.r == r && other.g == g && other.b == b
+    }
+}
+
+fun Color.toDotColor(): DotColor = DotColor(red, green, blue)
+fun DotColor.toColor(): Color = Color(r, g, b)

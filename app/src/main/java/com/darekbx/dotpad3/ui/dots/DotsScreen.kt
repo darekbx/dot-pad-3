@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -32,13 +33,15 @@ import kotlin.math.roundToInt
 
 @Composable
 fun DotsBoardScreen(
-    items: List<Dot>,
+    items: State<List<Dot>>,
     selectedDot: Dot?,
     onSave: (Dot) -> Unit,
     onResetTime: (Dot) -> Unit,
-    onAddReminder: (Dot) -> Unit,
+    onShowDatePicker: () -> Unit,
+    onShowTimePicker: () -> Unit,
     onRemove: (Dot) -> Unit,
     onSelectDot: (Dot) -> Unit,
+    onDiscardChanges: () -> Unit,
     dotDialogState: Boolean
 ) {
     Box(
@@ -48,7 +51,7 @@ fun DotsBoardScreen(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { offset ->
-                        val dot = Dot(null, "", offset.x, offset.y, DotSize.MEDIUM, dotRed)
+                        val dot = Dot(null, "", offset.x, offset.y)
                         onSelectDot(dot)
                     }
                 )
@@ -59,7 +62,7 @@ fun DotsBoardScreen(
     }
 
     if (dotDialogState && selectedDot != null) {
-        DotDialog(selectedDot, onSave, onResetTime, onAddReminder, onRemove)
+        DotDialog(selectedDot, onSave, onResetTime, onShowDatePicker, onShowTimePicker, onRemove, onDiscardChanges)
     }
 }
 
@@ -79,8 +82,8 @@ private fun DrawAreas() {
 }
 
 @Composable
-fun DotsBoard(items: List<Dot>, onRemove: (Dot) -> Unit, onSelectDot: (Dot) -> Unit) {
-    for (item in items) {
+fun DotsBoard(items: State<List<Dot>>, onRemove: (Dot) -> Unit, onSelectDot: (Dot) -> Unit) {
+    for (item in items.value) {
         DotView(item,
             onRemove = { onRemove(item) },
             onSelectDot = { onSelectDot(it) }
@@ -99,7 +102,7 @@ fun DotView(dot: Dot, onRemove: () -> Unit, onSelectDot: (Dot) -> Unit) {
             .offset { IntOffset(offsetX.value.roundToInt(), offsetY.value.roundToInt()) }
             .clip(CircleShape)
             .alpha(if (dot.isSticked) 0.5F else 1F)
-            .background(dot.color)
+            .background(dot.requireColor().toColor())
             .size(size)
             .pointerInput(dot) {
                 detectTapGestures(
@@ -130,10 +133,10 @@ private fun DotText(dot: Dot) {
 
 @Composable
 private fun DotReminder(dot: Dot) {
-    if (dot.reminder != null) {
+    dot.reminder?.let {
         val now = System.currentTimeMillis()
-        val remianingSpan = (dot.reminder - now)
-        val span = (dot.reminder - dot.createdDate)
+        val remianingSpan = (it - now)
+        val span = (it - dot.createdDate)
         val percent = (span - remianingSpan).toFloat() / max(1, span)
         CircularProgressIndicator(
             progress = percent,
@@ -146,7 +149,7 @@ private fun DotReminder(dot: Dot) {
     }
 }
 
-private fun mapDotSize(dot: Dot) = when (dot.size) {
+private fun mapDotSize(dot: Dot) = when (dot.requireSize()) {
     DotSize.SMALL -> 20.dp
     DotSize.MEDIUM -> 35.dp
     DotSize.LARGE -> 60.dp

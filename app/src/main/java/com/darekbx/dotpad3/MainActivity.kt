@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -23,15 +25,22 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.darekbx.dotpad3.navigation.NavigationItem
 import com.darekbx.dotpad3.ui.dots.DotsBoardScreen
+import com.darekbx.dotpad3.ui.dots.ShowDatePicker
+import com.darekbx.dotpad3.ui.dots.ShowTimePicker
 import com.darekbx.dotpad3.viewmodel.DotsViewModel
 import com.darekbx.dotpad3.ui.theme.DotPad3Theme
+import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
 
-    private val dotsViewModel by viewModels<DotsViewModel>()
+    private val dotsViewModel: DotsViewModel by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        /*dotsViewModel.allDots.observe(this, Observer {
+            val c = it.size
+        })*/
 
         setContent {
             val navController = rememberNavController()
@@ -80,16 +89,33 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun DotsScreen() {
+        val dots = dotsViewModel.allDots().observeAsState(listOf())
         DotsBoardScreen(
-            items = dotsViewModel.dots,
+            items = dots,
             selectedDot = dotsViewModel.selectedDot.value,
             onSave = dotsViewModel::saveItem,
             onResetTime = dotsViewModel::resetTime,
-            onAddReminder = dotsViewModel::addReminder,
+            onShowDatePicker = dotsViewModel::showDatePicker,
+            onShowTimePicker = dotsViewModel::showTimePicker,
             onRemove = dotsViewModel::removeItem,
             onSelectDot = dotsViewModel::selectDot,
+            onDiscardChanges = dotsViewModel::discardChanges,
             dotDialogState = dotsViewModel.dialogState.value
         )
+
+        if (dotsViewModel.datePickerState.value) {
+            ShowDatePicker(dateCallback = { y, m, d ->
+                dotsViewModel.saveDate(y, m, d)
+                dotsViewModel.showTimePicker()
+            })
+        }
+
+        if (dotsViewModel.timePickerState.value) {
+            ShowTimePicker(timeCallback = { h, m ->
+                dotsViewModel.dismissPickers()
+                dotsViewModel.saveTime(h, m)
+            })
+        }
     }
 
     @Composable
