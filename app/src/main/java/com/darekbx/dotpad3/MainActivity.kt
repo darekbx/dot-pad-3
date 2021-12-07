@@ -3,7 +3,6 @@ package com.darekbx.dotpad3
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -16,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -37,10 +35,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        /*dotsViewModel.allDots.observe(this, Observer {
-            val c = it.size
-        })*/
 
         setContent {
             val navController = rememberNavController()
@@ -96,7 +90,6 @@ class MainActivity : ComponentActivity() {
             onSave = dotsViewModel::saveItem,
             onResetTime = dotsViewModel::resetTime,
             onShowDatePicker = dotsViewModel::showDatePicker,
-            onShowTimePicker = dotsViewModel::showTimePicker,
             onRemove = dotsViewModel::removeItem,
             onSelectDot = dotsViewModel::selectDot,
             onDiscardChanges = dotsViewModel::discardChanges,
@@ -116,6 +109,35 @@ class MainActivity : ComponentActivity() {
                 dotsViewModel.saveTime(h, m)
             })
         }
+
+        if (dotsViewModel.deleteReminderState.value) {
+            DeleteReminderDialog()
+        }
+    }
+
+    @Composable
+    private fun DeleteReminderDialog() {
+        AlertDialog(
+            backgroundColor = Color.Black,
+            onDismissRequest = { dotsViewModel.dismissDeleteReminderDialog() },
+            confirmButton = {
+                Button(onClick = {
+                    dotsViewModel.removeReminder()
+                    dotsViewModel.dismissDeleteReminderDialog()
+                }) {
+                    Text(text = stringResource(id = R.string.yes))
+
+                }
+            },
+            dismissButton = {
+                Button(onClick = { dotsViewModel.dismissDeleteReminderDialog() }) {
+                    Text(text = stringResource(id = R.string.no))
+                }
+            },
+            text = {
+                Text(text = stringResource(id = R.string.delete_reminder))
+            }
+        )
     }
 
     @Composable

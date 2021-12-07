@@ -38,7 +38,6 @@ fun DotsBoardScreen(
     onSave: (Dot) -> Unit,
     onResetTime: (Dot) -> Unit,
     onShowDatePicker: () -> Unit,
-    onShowTimePicker: () -> Unit,
     onRemove: (Dot) -> Unit,
     onSelectDot: (Dot) -> Unit,
     onDiscardChanges: () -> Unit,
@@ -58,11 +57,11 @@ fun DotsBoardScreen(
             }
     ) {
         DrawAreas()
-        DotsBoard(items = items, onRemove, onSelectDot)
+        DotsBoard(items = items, onRemove, onSelectDot, onSave)
     }
 
     if (dotDialogState && selectedDot != null) {
-        DotDialog(selectedDot, onSave, onResetTime, onShowDatePicker, onShowTimePicker, onRemove, onDiscardChanges)
+        DotDialog(selectedDot, onSave, onResetTime, onShowDatePicker, onRemove, onDiscardChanges)
     }
 }
 
@@ -82,17 +81,26 @@ private fun DrawAreas() {
 }
 
 @Composable
-fun DotsBoard(items: State<List<Dot>>, onRemove: (Dot) -> Unit, onSelectDot: (Dot) -> Unit) {
+fun DotsBoard(
+    items: State<List<Dot>>,
+    onRemove: (Dot) -> Unit,
+    onSelectDot: (Dot) -> Unit,
+    onSave: (Dot) -> Unit
+) {
     for (item in items.value) {
         DotView(item,
             onRemove = { onRemove(item) },
-            onSelectDot = { onSelectDot(it) }
+            onSelectDot = { onSelectDot(it) },
+            onSave = { onSave(it) }
         )
     }
 }
 
 @Composable
-fun DotView(dot: Dot, onRemove: () -> Unit, onSelectDot: (Dot) -> Unit) {
+fun DotView(dot: Dot,
+            onRemove: () -> Unit,
+            onSelectDot: (Dot) -> Unit,
+            onSave: (Dot) -> Unit) {
     val offsetX = rememberSaveable(dot) { mutableStateOf(dot.x) }
     val offsetY = rememberSaveable(dot) { mutableStateOf(dot.y) }
     val size = mapDotSize(dot)
@@ -102,7 +110,11 @@ fun DotView(dot: Dot, onRemove: () -> Unit, onSelectDot: (Dot) -> Unit) {
             .offset { IntOffset(offsetX.value.roundToInt(), offsetY.value.roundToInt()) }
             .clip(CircleShape)
             .alpha(if (dot.isSticked) 0.5F else 1F)
-            .background(dot.requireColor().toColor())
+            .background(
+                dot
+                    .requireColor()
+                    .toColor()
+            )
             .size(size)
             .pointerInput(dot) {
                 detectTapGestures(
@@ -111,7 +123,9 @@ fun DotView(dot: Dot, onRemove: () -> Unit, onSelectDot: (Dot) -> Unit) {
                 )
             }
             .pointerInput(dot) {
-                detectDragGestures { change, dragAmount ->
+                detectDragGestures(
+                    onDragEnd = { onSave(dot) }
+                ) { change, dragAmount ->
                     change.consumeAllChanges()
                     offsetX.value += dragAmount.x
                     offsetY.value += dragAmount.y
@@ -159,7 +173,9 @@ private fun mapDotSize(dot: Dot) = when (dot.requireSize()) {
 @Preview
 @Composable
 fun DotPreview() {
-    DotView(Dot(1L,"One", 0F, 0F, DotSize.LARGE, dotRed, isSticked = false,
+    DotView(Dot(
+        1L, "One", 0F, 0F, DotSize.LARGE, dotRed, isSticked = false,
         createdDate = 1636109037074L,
-        reminder = 1636109037074L + 51 * 60 * 1000), onRemove = { }, { })
+        reminder = 1636109037074L + 51 * 60 * 1000
+    ), onRemove = { }, { }, { })
 }

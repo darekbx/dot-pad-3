@@ -22,9 +22,6 @@ interface DotsDao {
     @Query("SELECT * FROM dots WHERE is_archived = 0 ORDER BY created_date ")
     fun fetchActive(): LiveData<List<DotDto>>
 
-    @Query("SELECT * FROM dots WHERE is_archived = 0 ORDER BY created_date ")
-    fun fetchActiveSync(): List<DotDto>
-
     @Query("SELECT * FROM dots WHERE is_archived = 1 ORDER BY created_date DESC LIMIT :limit OFFSET :offset")
     fun fetchArchive(limit: Int, offset: Int): LiveData<List<DotDto>>
 

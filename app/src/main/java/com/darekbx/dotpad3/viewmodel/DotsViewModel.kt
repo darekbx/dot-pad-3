@@ -1,125 +1,109 @@
 package com.darekbx.dotpad3.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.*
+import com.darekbx.dotpad3.reminder.ReminderCreator
 import com.darekbx.dotpad3.repository.local.DotsDao
 import com.darekbx.dotpad3.ui.dots.Dot
-import com.darekbx.dotpad3.ui.dots.DotColor
-import com.darekbx.dotpad3.ui.dots.DotSize
-import com.darekbx.dotpad3.ui.theme.dotBlue
-import com.darekbx.dotpad3.ui.theme.dotRed
-import com.darekbx.dotpad3.ui.theme.dotTeal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
 
 class DotsViewModel(
-    private val dao: DotsDao
+    private val dao: DotsDao,
+    private val reminderCreator: ReminderCreator
 ) : ViewModel() {
 
     var selectedDot = mutableStateOf<Dot?>(null)
     var dialogState = mutableStateOf(false)
     var datePickerState = mutableStateOf(false)
     var timePickerState = mutableStateOf(false)
+    var deleteReminderState = mutableStateOf(false)
 
-    private var y: Int = 0
-    private var m: Int = 0
-    private var d: Int = 0
+    private var reminderYear: Int = 0
+    private var reminderMonth: Int = 0
+    private var reminderDay: Int = 0
+    private var reminderChanged = false
 
-    fun allDots(): LiveData<List<Dot>> {
-        val liveData = MutableLiveData<List<Dot>>()
+    fun allDots(): LiveData<List<Dot>> =
+        Transformations.map(dao.fetchActive()) { dots ->
+            dots.map { dto -> dto.toDot() }
+        }
 
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-
-                val all = dao.fetchActiveSync()
-                    .map { dto ->
-                        with(dto) {
-                            val c = Color(color)
-                            Dot(
-                                id,
-                                text,
-                                positionX.toFloat(),
-                                positionY.toFloat(),
-                                DotSize.values().find { it.size == size },
-                                DotColor(c.red, c.green, c.blue),
-                                createdDate,
-                                isArchived,
-                                isSticked,
-                                reminder?.takeIf { it > 0 },
-                                calendarEventId,
-                                calendarReminderId
-                            )
-                        }
-                    }
-
-                liveData.postValue(all)
+    fun saveItem(dot: Dot) {
+        dialogState.value = false
+        runInIO {
+            addReminder(dot)
+            if (dot.id == null) {
+                dao.add(dot.toDotDto())
+            } else {
+                dao.update(dot.toDotDto())
             }
         }
-
-        return liveData
     }
 
-    var dots = mutableStateListOf<Dot>().apply {
-        add(Dot(1L, "142d", 100F, 100F, DotSize.SMALL, dotRed))
-        add(
-            Dot(
-                2L,
-                "600s",
-                200F,
-                200F,
-                DotSize.MEDIUM,
-                dotTeal,
-                createdDate = 1636109037074L,
-                reminder = 1636109037074L + 51 * 60 * 1000
-            )
-        )
-        add(Dot(3L, "Three", 400F, 400F, DotSize.LARGE, dotBlue))
-        add(Dot(4L, "Three", 600F, 600F, DotSize.HUGE, dotBlue, isSticked = true))
-    }
-        private set
-
-    fun saveItem(item: Dot) {
-        dialogState.value = false
-        // Check if dot id is null then save, when not null update
-        if (item.id == null) {
-            dots.add(item)
-        } else {
-            dots.removeIf { it.id == item.id }
-            dots.add(item)
+    private fun addReminder(dot: Dot) {
+        if (reminderChanged && dot.hasReminder()) {
+            val (eventId, reminderId) = reminderCreator.addReminder(dot)
+            dot.calendarEventId = eventId
+            dot.calendarReminderId = reminderId
         }
     }
 
-    fun removeItem(item: Dot) {
+    fun removeItem(dot: Dot) {
         dialogState.value = false
-        dots.remove(item)
+        dot.id?.let { dotId ->
+            runInIO {
+                reminderCreator.removeReminder(dot)
+                dao.deleteDot(dotId)
+            }
+        }
     }
 
-    fun resetTime(item: Dot) {
+    fun resetTime(dot: Dot) {
         dialogState.value = false
+        runInIO {
+            dao.update(dot.toDotDto())
+        }
     }
 
     fun showDatePicker() {
+        if (selectedDot.value?.reminder != null) {
+            deleteReminderState.value = true
+            return
+        }
         datePickerState.value = true
     }
 
+    fun removeReminder() {
+        selectedDot.value?.run {
+            reminder = null
+            calendarEventId = null
+            calendarReminderId = null
+            runInIO {
+                reminderCreator.removeReminder(this)
+                dao.update(toDotDto())
+            }
+        }
+    }
+
     fun saveDate(year: Int, month: Int, day: Int) {
-        y = year
-        m = month
-        d = day
+        reminderYear = year
+        reminderMonth = month
+        reminderDay = day
     }
 
     fun saveTime(hour: Int, minute: Int) {
-        val c = Calendar.getInstance()
-        c.set(Calendar.YEAR, y)
-        c.set(Calendar.MONTH, m)
-        c.set(Calendar.DAY_OF_MONTH, d)
-        c.set(Calendar.HOUR_OF_DAY, hour)
-        c.set(Calendar.MINUTE, minute)
-        selectedDot?.value?.reminder = c.timeInMillis
+        with(Calendar.getInstance()) {
+            set(Calendar.YEAR, reminderYear)
+            set(Calendar.MONTH, reminderMonth)
+            set(Calendar.DAY_OF_MONTH, reminderDay)
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            selectedDot.value?.reminder = timeInMillis
+            reminderChanged = true
+        }
     }
 
     fun showTimePicker() {
@@ -140,5 +124,17 @@ class DotsViewModel(
     fun discardChanges() {
         dialogState.value = false
         selectedDot.value = null
+    }
+
+    fun dismissDeleteReminderDialog() {
+        deleteReminderState.value = false
+    }
+
+    private fun runInIO(block: () -> Unit) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                block()
+            }
+        }
     }
 }

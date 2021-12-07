@@ -17,6 +17,10 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        def Properties properties = new Properties()
+        properties.load(project.rootProject.file("local.properties").newDataInputStream())
+        buildConfigField("String", "USER_EMAIL", properties.getProperty("default.user.email", ""))
     }
 
     buildTypes {

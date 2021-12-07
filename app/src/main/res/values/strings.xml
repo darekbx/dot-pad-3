@@ -4,4 +4,7 @@
     <string name="history">History</string>
     <string name="statistics">Statistics</string>
     <string name="calendar">Calendar</string>
+    <string name="delete_reminder">Delete reminder?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 </resources>

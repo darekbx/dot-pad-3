@@ -38,7 +38,6 @@ fun DotDialog(
     onSave: (Dot) -> Unit,
     onResetTime: (Dot) -> Unit,
     onShowDatePicker: () -> Unit,
-    onShowTimePicker: () -> Unit,
     onRemove: (Dot) -> Unit,
     onDiscardChanges: () -> Unit
 ) {
@@ -46,7 +45,7 @@ fun DotDialog(
         onDismissRequest = { onDiscardChanges() },
         properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
     ) {
-        DialogContent(dot, onSave, onResetTime, onShowDatePicker, onShowTimePicker, onRemove)
+        DialogContent(dot, onSave, onResetTime, onShowDatePicker, onRemove)
     }
 }
 
@@ -56,7 +55,6 @@ fun DialogContent(
     onSave: (Dot) -> Unit,
     onResetTime: (Dot) -> Unit,
     onShowDatePicker: () -> Unit,
-    onShowTimePicker: () -> Unit,
     onRemove: (Dot) -> Unit
 ) {
 
@@ -298,5 +296,5 @@ fun DialogPreview() {
     DialogContent(Dot(
         1L, "", 0F, 0F, DotSize.MEDIUM, dotTeal, isSticked = true, createdDate = 1636109037074L,
         reminder = 1636109037074L + 51 * 60 * 1000
-    ), { }, { }, { }, { }, { })
+    ), { }, { }, { }, { })
 }

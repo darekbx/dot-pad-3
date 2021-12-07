@@ -1,6 +1,7 @@
 package com.darekbx.dotpad3.ui.dots
 
 import androidx.compose.ui.graphics.Color
+import android.graphics.Color as GColor
 import java.io.Serializable
 
 data class Dot(
@@ -19,6 +20,10 @@ data class Dot(
 ) {
 
     val isNew = id == null
+
+    fun hasReminder(): Boolean {
+        return (reminder ?: 0L) > 0L
+    }
 
     fun requireSize(): DotSize = size ?: throw IllegalStateException("Size is null")
 
@@ -42,3 +47,4 @@ class DotColor(val r: Float, val g: Float, val b: Float) : Serializable {
 
 fun Color.toDotColor(): DotColor = DotColor(red, green, blue)
 fun DotColor.toColor(): Color = Color(r, g, b)
+fun DotColor.toIntColor(): Int = GColor.argb(1F, r, g, b)
