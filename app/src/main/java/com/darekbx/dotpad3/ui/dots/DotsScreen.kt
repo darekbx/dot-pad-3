@@ -28,9 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.darekbx.dotpad3.ui.theme.dotRed
 import com.darekbx.dotpad3.utils.TimeUtils
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlin.math.max
 import kotlin.math.roundToInt
 
+@ExperimentalPermissionsApi
 @Composable
 fun DotsBoardScreen(
     items: State<List<Dot>>,
@@ -50,7 +52,7 @@ fun DotsBoardScreen(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = { offset ->
-                        val dot = Dot(null, "", offset.x, offset.y)
+                        val dot = Dot(null, "", offset.x, offset.y, DotSize.LARGE, dotRed)
                         onSelectDot(dot)
                     }
                 )

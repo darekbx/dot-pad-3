@@ -1,9 +1,11 @@
 package com.darekbx.dotpad3
 
+import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -22,13 +24,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.darekbx.dotpad3.navigation.NavigationItem
+import com.darekbx.dotpad3.ui.HistoryListScreen
 import com.darekbx.dotpad3.ui.dots.DotsBoardScreen
 import com.darekbx.dotpad3.ui.dots.ShowDatePicker
 import com.darekbx.dotpad3.ui.dots.ShowTimePicker
 import com.darekbx.dotpad3.viewmodel.DotsViewModel
 import com.darekbx.dotpad3.ui.theme.DotPad3Theme
+import com.darekbx.dotpad3.utils.RequestPermission
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import org.koin.android.ext.android.inject
 
+@ExperimentalFoundationApi
+@ExperimentalPermissionsApi
 class MainActivity : ComponentActivity() {
 
     private val dotsViewModel: DotsViewModel by inject()
@@ -37,14 +44,22 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val navController = rememberNavController()
-            this.window.statusBarColor = android.graphics.Color.BLACK
-            DotPad3Theme {
-                Scaffold(
-                    bottomBar = { BottomAppBar(navController) },
-                    content = { Navigation(navController) }
-                )
+            RequestPermission(Manifest.permission.READ_CALENDAR) {
+                DisplayContent()
             }
+        }
+    }
+
+    @Composable
+    private fun DisplayContent() {
+        val navController = rememberNavController()
+        this.window.statusBarColor = android.graphics.Color.BLACK
+        DotPad3Theme {
+            Scaffold(
+                backgroundColor = Color.Black,
+                bottomBar = { BottomAppBar(navController) },
+                content = { Navigation(navController) }
+            )
         }
     }
 
@@ -68,7 +83,12 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun HistoryScreen() {
-        Text("History")
+        val dots = dotsViewModel.archivedDots().observeAsState(listOf())
+        HistoryListScreen(
+            dots,
+            onRestore = { dot -> dotsViewModel.restore(dot) },
+            onPermanentlyDelete = { dot -> dotsViewModel.delete(dot) }
+        )
     }
 
     @Composable
@@ -83,14 +103,14 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun DotsScreen() {
-        val dots = dotsViewModel.allDots().observeAsState(listOf())
+        val dots = dotsViewModel.activeDots().observeAsState(listOf())
         DotsBoardScreen(
             items = dots,
             selectedDot = dotsViewModel.selectedDot.value,
             onSave = dotsViewModel::saveItem,
             onResetTime = dotsViewModel::resetTime,
             onShowDatePicker = dotsViewModel::showDatePicker,
-            onRemove = dotsViewModel::removeItem,
+            onRemove = dotsViewModel::moveToArchive,
             onSelectDot = dotsViewModel::selectDot,
             onDiscardChanges = dotsViewModel::discardChanges,
             dotDialogState = dotsViewModel.dialogState.value

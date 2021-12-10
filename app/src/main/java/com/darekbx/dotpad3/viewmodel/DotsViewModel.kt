@@ -26,8 +26,13 @@ class DotsViewModel(
     private var reminderDay: Int = 0
     private var reminderChanged = false
 
-    fun allDots(): LiveData<List<Dot>> =
+    fun activeDots(): LiveData<List<Dot>> =
         Transformations.map(dao.fetchActive()) { dots ->
+            dots.map { dto -> dto.toDot() }
+        }
+
+    fun archivedDots(): LiveData<List<Dot>> =
+        Transformations.map(dao.fetchArchive(Int.MAX_VALUE, 0)) { dots ->
             dots.map { dto -> dto.toDot() }
         }
 
@@ -43,6 +48,20 @@ class DotsViewModel(
         }
     }
 
+    fun restore(dot: Dot) {
+        runInIO {
+            val dto = dot.toDotDto()
+            dto.isArchived = false
+            dao.update(dto)
+        }
+    }
+
+    fun delete(dot: Dot) {
+        runInIO {
+            dao.deleteDot(dot.id!!)
+        }
+    }
+
     private fun addReminder(dot: Dot) {
         if (reminderChanged && dot.hasReminder()) {
             val (eventId, reminderId) = reminderCreator.addReminder(dot)
@@ -51,12 +70,14 @@ class DotsViewModel(
         }
     }
 
-    fun removeItem(dot: Dot) {
+    fun moveToArchive(dot: Dot) {
         dialogState.value = false
         dot.id?.let { dotId ->
             runInIO {
                 reminderCreator.removeReminder(dot)
-                dao.deleteDot(dotId)
+                val dotDto = dot.toDotDto()
+                dotDto.isArchived = true
+                dao.update(dotDto)
             }
         }
     }

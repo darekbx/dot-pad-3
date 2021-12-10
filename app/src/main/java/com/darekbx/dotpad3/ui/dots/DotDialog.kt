@@ -1,5 +1,6 @@
 package com.darekbx.dotpad3.ui.dots
 
+import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,16 +13,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.darekbx.dotpad3.R
 import com.darekbx.dotpad3.ui.theme.*
+import com.darekbx.dotpad3.utils.RequestPermission
 import com.darekbx.dotpad3.utils.TimeUtils
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 private val colors = listOf(
     dotRed,
@@ -32,6 +37,7 @@ private val colors = listOf(
     dotYellow
 )
 
+@ExperimentalPermissionsApi
 @Composable
 fun DotDialog(
     dot: Dot,
@@ -41,11 +47,14 @@ fun DotDialog(
     onRemove: (Dot) -> Unit,
     onDiscardChanges: () -> Unit
 ) {
-    Dialog(
-        onDismissRequest = { onDiscardChanges() },
-        properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
-    ) {
-        DialogContent(dot, onSave, onResetTime, onShowDatePicker, onRemove)
+
+    RequestPermission(Manifest.permission.WRITE_CALENDAR) {
+        Dialog(
+            onDismissRequest = { onDiscardChanges() },
+            properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
+        ) {
+            DialogContent(dot, onSave, onResetTime, onShowDatePicker, onRemove)
+        }
     }
 }
 
@@ -68,7 +77,6 @@ fun DialogContent(
         dot.size = size
         dot.color = color
         dot.isSticked = isSticked
-        // TODO presist other values
         onSave(dot)
     }
 
@@ -80,7 +88,7 @@ fun DialogContent(
             modifier = Modifier
                 .width(300.dp)
                 .height(358.dp)
-                .background(Color(0xFF303030))
+                .background(dialogBackgroud)
         ) {
             Column(
                 Modifier
@@ -252,6 +260,10 @@ private fun StickedInfo(dotIsSticked: Boolean, onStickedChanged: (Boolean) -> Un
             text = "Sticked"
         )
         Checkbox(
+            colors = CheckboxDefaults.colors(
+                checkedColor = Color.DarkGray,
+                uncheckedColor = Color.Gray
+            ),
             modifier = Modifier.padding(start = 4.dp),
             checked = dotIsSticked,
             onCheckedChange = { onStickedChanged(it) })
@@ -276,10 +288,11 @@ private fun DotMessage(text: String, onTextChange: (String) -> Unit) {
             .fillMaxWidth()
             .padding(8.dp),
         textStyle = Typography.h6,
+        cursorBrush = SolidColor(dotYellow.toColor()),
         decorationBox = { innerTextField ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 if (text.isEmpty()) {
-                    Text("Enter note", color = Color.Gray)
+                    Text("Enter note", color = Color.Gray, fontSize = 12.sp)
                 }
             }
 

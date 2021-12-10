@@ -7,4 +7,9 @@
     <string name="delete_reminder">Delete reminder?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="button_ok">OK</string>
+    <string name="permissions_are_required">Please grant required permissions</string>
+    <string name="select_action">Select action for %s</string>
+    <string name="action_delete_permamenty">Delete permanently</string>
+    <string name="action_restore">Restore</string>
 </resources>
