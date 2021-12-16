@@ -80,6 +80,8 @@ dependencies {
     implementation "io.insert-koin:koin-androidx-viewmodel:$koin_version"
     //implementation "io.insert-koin:koin-androidx-scope:$koin_version"
 
+    implementation "io.github.boguszpawlowski.composecalendar:composecalendar:0.2.1"
+
     testImplementation 'junit:junit:4.+'
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
 }

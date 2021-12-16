@@ -2,7 +2,7 @@ package com.darekbx.dotpad3.repository.local
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.darekbx.dotpad3.repository.local.entities.DotDto
-import com.darekbx.dotpad3.repository.local.entities.StatisticsValue
+import com.darekbx.dotpad3.repository.local.entities.StatisticsEntity
 
 @Dao
 interface DotsDao {
@@ -19,7 +19,7 @@ interface DotsDao {
     @Query("SELECT * FROM dots WHERE id = :dotId")
     fun fetchDot(dotId: Long): LiveData<DotDto>
 
-    @Query("SELECT * FROM dots WHERE is_archived = 0 ORDER BY created_date ")
+    @Query("SELECT * FROM dots WHERE is_archived = 0 ORDER BY created_date DESC")
     fun fetchActive(): LiveData<List<DotDto>>
 
     @Query("SELECT * FROM dots WHERE is_archived = 1 ORDER BY created_date DESC LIMIT :limit OFFSET :offset")
@@ -35,10 +35,10 @@ interface DotsDao {
     fun countStatistics(): LiveData<Int>
 
     @Query("SELECT COUNT(size) AS occurrences, size AS value FROM dots GROUP BY size")
-    fun sizeStatistics(): LiveData<List<StatisticsValue>>
+    fun sizeStatistics(): LiveData<List<StatisticsEntity>>
 
     @Query("SELECT COUNT(color) AS occurrences, color AS value FROM dots GROUP BY color")
-    fun colorStatistics(): LiveData<List<StatisticsValue>>
+    fun colorStatistics(): LiveData<List<StatisticsEntity>>
 
     @Update
     fun update(dotDto: DotDto)

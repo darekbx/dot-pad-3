@@ -3,6 +3,8 @@ package com.darekbx.dotpad3.ui.dots
 import androidx.compose.ui.graphics.Color
 import android.graphics.Color as GColor
 import java.io.Serializable
+import java.util.*
+
 
 data class Dot(
     var id: Long? = null,
@@ -20,6 +22,10 @@ data class Dot(
 ) {
 
     val isNew = id == null
+
+    val reminderCalendar = reminder?.let {
+        Calendar.getInstance().apply { setTimeInMillis(it) }
+    }
 
     fun hasReminder(): Boolean {
         return (reminder ?: 0L) > 0L

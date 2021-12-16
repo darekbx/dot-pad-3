@@ -2,8 +2,10 @@ package com.darekbx.dotpad3.viewmodel
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.*
+import com.darekbx.dotpad3.model.StatisticValue
 import com.darekbx.dotpad3.reminder.ReminderCreator
 import com.darekbx.dotpad3.repository.local.DotsDao
+import com.darekbx.dotpad3.repository.local.entities.StatisticsEntity
 import com.darekbx.dotpad3.ui.dots.Dot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -61,6 +63,22 @@ class DotsViewModel(
             dao.deleteDot(dot.id!!)
         }
     }
+
+    fun countAll(): LiveData<Int> = dao.countStatistics()
+
+    fun colorStatistics() = mapToPercents(dao.colorStatistics())
+
+    fun sizeStatistics() = mapToPercents(dao.sizeStatistics())
+
+    private fun mapToPercents(values: LiveData<List<StatisticsEntity>>):
+            LiveData<List<StatisticValue>> =
+        Transformations.map(values, { statisticValues ->
+            val sum = statisticValues.sumOf { it.occurrences ?: 0 }.toFloat()
+            return@map statisticValues.map { statisticValue ->
+                val percent = (statisticValue.occurrences ?: 0) / sum * 100F
+                return@map StatisticValue(percent, statisticValue.value!!)
+            }
+        })
 
     private fun addReminder(dot: Dot) {
         if (reminderChanged && dot.hasReminder()) {

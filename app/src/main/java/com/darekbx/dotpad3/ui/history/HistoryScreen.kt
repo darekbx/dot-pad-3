@@ -1,4 +1,4 @@
-package com.darekbx.dotpad3.ui
+package com.darekbx.dotpad3.ui.history
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.darekbx.dotpad3.R
+import com.darekbx.dotpad3.ui.CommonLoading
 import com.darekbx.dotpad3.ui.dots.Dot
 import com.darekbx.dotpad3.ui.dots.DotSize
 import com.darekbx.dotpad3.ui.dots.toColor
@@ -41,10 +42,11 @@ fun HistoryListScreen(
     Column(
         Modifier
             .fillMaxHeight()
+            .padding(bottom = 58.dp)
     ) {
         SearchView(textState)
         if (dots.value.isNullOrEmpty()) {
-            HistoryLoading()
+            CommonLoading()
         } else {
             DotList(
                 dots.value,
@@ -105,22 +107,6 @@ private fun DotOptionsDialog(
 }
 
 @Composable
-private fun HistoryLoading() {
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
-        CircularProgressIndicator(
-            Modifier
-                .align(Alignment.Center)
-                .size(64.dp),
-            color = dotOrange.toColor()
-        )
-    }
-}
-
-@Composable
 private fun DotList(
     dots: List<Dot>,
     searchState: MutableState<TextFieldValue>,
@@ -139,7 +125,7 @@ private fun DotList(
             Text(
                 modifier = Modifier.align(Alignment.Center),
                 text = "Nothing to show",
-                style = Typography.h4
+                style = Typography.h5
             )
         }
     } else {
@@ -206,8 +192,8 @@ fun SearchView(state: MutableState<TextFieldValue>) {
 fun HistoryDot(dot: Dot, onClick: () -> Unit) {
     Column(
         Modifier
-            .fillMaxWidth()
             .padding(12.dp)
+            .fillMaxWidth()
             .clickable { onClick() }
     ) {
         Row(
@@ -234,7 +220,7 @@ fun HistoryDot(dot: Dot, onClick: () -> Unit) {
 
         Text(
             text = dot.text,
-            style = Typography.h4
+            style = Typography.h5
         )
     }
 }

@@ -4,6 +4,7 @@
     <string name="history">History</string>
     <string name="statistics">Statistics</string>
     <string name="calendar">Calendar</string>
+    <string name="list">List</string>
     <string name="delete_reminder">Delete reminder?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
@@ -12,4 +13,7 @@
     <string name="select_action">Select action for %s</string>
     <string name="action_delete_permamenty">Delete permanently</string>
     <string name="action_restore">Restore</string>
+    <string name="all_dots_label">All dots count: %d</string>
+    <string name="colors_label">Colors</string>
+    <string name="sizes_label">Sizes</string>
 </resources>

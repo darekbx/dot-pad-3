@@ -9,7 +9,8 @@ import androidx.compose.ui.graphics.Color
 private val ColorPalette = lightColors(
     primary = Color.Black,
     primaryVariant = LightGreen,
-    secondary = Teal200
+    secondary = Teal200,
+    onSurface = Color.White
 )
 
 @Composable

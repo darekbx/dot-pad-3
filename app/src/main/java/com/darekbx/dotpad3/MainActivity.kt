@@ -24,10 +24,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.darekbx.dotpad3.navigation.NavigationItem
-import com.darekbx.dotpad3.ui.HistoryListScreen
+import com.darekbx.dotpad3.ui.calendar.CalendarScreen
+import com.darekbx.dotpad3.ui.history.HistoryListScreen
+import com.darekbx.dotpad3.ui.list.ListScreen
 import com.darekbx.dotpad3.ui.dots.DotsBoardScreen
 import com.darekbx.dotpad3.ui.dots.ShowDatePicker
 import com.darekbx.dotpad3.ui.dots.ShowTimePicker
+import com.darekbx.dotpad3.ui.statistics.StatisticsScreen
 import com.darekbx.dotpad3.viewmodel.DotsViewModel
 import com.darekbx.dotpad3.ui.theme.DotPad3Theme
 import com.darekbx.dotpad3.utils.RequestPermission
@@ -67,22 +70,25 @@ class MainActivity : ComponentActivity() {
     fun Navigation(navController: NavHostController) {
         NavHost(navController, startDestination = NavigationItem.Home.route) {
             composable(NavigationItem.Home.route) {
-                DotsScreen()
+                DotsBoard()
             }
             composable(NavigationItem.History.route) {
-                HistoryScreen()
+                History()
             }
             composable(NavigationItem.Statistics.route) {
-                StatisticsScreen()
+                Statistics()
             }
             composable(NavigationItem.Calendar.route) {
-                CalendarScreen()
+                Calendar()
+            }
+            composable(NavigationItem.List.route) {
+                List()
             }
         }
     }
 
     @Composable
-    private fun HistoryScreen() {
+    private fun History() {
         val dots = dotsViewModel.archivedDots().observeAsState(listOf())
         HistoryListScreen(
             dots,
@@ -92,17 +98,27 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun StatisticsScreen() {
-        Text("Statistics")
+    private fun List() {
+        val dots = dotsViewModel.activeDots().observeAsState(listOf())
+        ListScreen(dots)
     }
 
     @Composable
-    private fun CalendarScreen() {
-        Text("Calendar")
+    private fun Statistics() {
+        val count = dotsViewModel.countAll().observeAsState(0)
+        val colors = dotsViewModel.colorStatistics().observeAsState(listOf())
+        val sizes = dotsViewModel.sizeStatistics().observeAsState(listOf())
+        StatisticsScreen(count, colors, sizes)
     }
 
     @Composable
-    private fun DotsScreen() {
+    private fun Calendar() {
+        val dots = dotsViewModel.activeDots().observeAsState(listOf())
+        CalendarScreen(dots)
+    }
+
+    @Composable
+    private fun DotsBoard() {
         val dots = dotsViewModel.activeDots().observeAsState(listOf())
         DotsBoardScreen(
             items = dots,
@@ -166,7 +182,8 @@ class MainActivity : ComponentActivity() {
             NavigationItem.Home,
             NavigationItem.History,
             NavigationItem.Statistics,
-            NavigationItem.Calendar
+            NavigationItem.Calendar,
+            NavigationItem.List
         )
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
