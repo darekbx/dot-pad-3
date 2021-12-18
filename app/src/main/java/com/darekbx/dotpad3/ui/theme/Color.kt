@@ -9,6 +9,7 @@ val Teal200 = Color(0xFF03DAC5)
 val LightGrey = Color(0xFFAAAAAA)
 
 val dialogBackgroud = Color(0xFF303030)
+val satSunBackground = Color(20, 20, 20, 180)
 
 val dotRed = Color(0xFFEF5350).toDotColor()
 val dotTeal = Color(0xFF26A69A).toDotColor()

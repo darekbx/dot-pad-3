@@ -21,10 +21,7 @@ import com.darekbx.dotpad3.ui.CommonLoading
 import com.darekbx.dotpad3.ui.dots.Dot
 import com.darekbx.dotpad3.ui.dots.DotSize
 import com.darekbx.dotpad3.ui.dots.toColor
-import com.darekbx.dotpad3.ui.theme.dotPurple
-import com.darekbx.dotpad3.ui.theme.dotRed
-import com.darekbx.dotpad3.ui.theme.dotTeal
-import com.darekbx.dotpad3.ui.theme.dotYellow
+import com.darekbx.dotpad3.ui.theme.*
 import io.github.boguszpawlowski.composecalendar.StaticCalendar
 import io.github.boguszpawlowski.composecalendar.day.Day
 import io.github.boguszpawlowski.composecalendar.day.DayState
@@ -32,21 +29,21 @@ import io.github.boguszpawlowski.composecalendar.selection.EmptySelectionState
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
+import java.time.temporal.WeekFields
 import java.util.*
 
 @ExperimentalFoundationApi
 @Composable
-fun CalendarScreen(dots: State<List<Dot>>) {
+fun CalendarScreen(dots: State<List<Dot>?>) {
     Box(
         Modifier
             .fillMaxHeight()
-            .padding(bottom = 58.dp)
+            .fillMaxHeight()
+            .padding(8.dp)
     ) {
-        if (dots.value == null) {
-            CommonLoading()
-        } else {
-            MakeCalendar(Modifier.align(Alignment.Center), dots.value)
-        }
+        dots.value?.let { dotsList ->
+            MakeCalendar(Modifier.align(Alignment.Center), dotsList)
+        } ?: CommonLoading()
     }
 }
 
@@ -54,7 +51,7 @@ fun CalendarScreen(dots: State<List<Dot>>) {
 private fun MakeCalendar(modifier: Modifier, dots: List<Dot>) {
     StaticCalendar(
         modifier,
-        showAdjacentMonths = false,
+        showAdjacentMonths = true,
         firstDayOfWeek = DayOfWeek.MONDAY,
         dayContent = { dayState ->
             val dayDots = dots.filterByDay(dayState)
@@ -86,49 +83,72 @@ private fun SingleDay(
     dayState: DayState<EmptySelectionState>,
     dayDots: List<Dot>
 ) {
-    val maxDayDots = 3
+    val backgroundColor = when (dayState.date.dayOfWeek) {
+        DayOfWeek.SATURDAY, DayOfWeek.SUNDAY -> satSunBackground
+        else -> Color.Black
+    }
     Card(
         modifier = modifier
             .aspectRatio(1f)
             .padding(2.dp),
-        backgroundColor = Color.Black
+        backgroundColor = backgroundColor
     ) {
         Box(
             Modifier
                 .fillMaxHeight()
                 .fillMaxWidth()
         ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(2.dp)) {
-                dayDots
-                    .take(maxDayDots)
-                    .forEach { dot ->
-                    Box(
-                        Modifier
-                            .padding(2.dp)
-                            .clip(CircleShape)
-                            .background(
-                                dot
-                                    .requireColor()
-                                    .toColor()
-                            )
-                            .size(8.dp)
-                    )
-                }
-                if (dayDots.size > maxDayDots) {
-                    val diff = dayDots.size - maxDayDots
-                    Text(
-                        modifier = Modifier.padding(start = 2.dp),
-                        text = "+$diff",
-                        color = Color.Gray,
-                        fontSize = 8.sp
-                    )
-                }
+            if (dayState.isFromCurrentMonth) {
+                DayDots(dayDots)
             }
 
             DayNumber(Modifier.align(Alignment.Center), dayState)
+            if (dayState.date.dayOfWeek == DayOfWeek.MONDAY) {
+                val weekFields: WeekFields = WeekFields.of(Locale.getDefault())
+                Text(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    text = "W${dayState.date.get(weekFields.weekOfYear())}",
+                    color = Color.Gray,
+                    fontSize = 10.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DayDots(
+    dayDots: List<Dot>,
+    maxDayDots: Int = 3
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(2.dp)
+    ) {
+        dayDots
+            .take(maxDayDots)
+            .forEach { dot ->
+                Box(
+                    Modifier
+                        .padding(2.dp)
+                        .clip(CircleShape)
+                        .background(
+                            dot
+                                .requireColor()
+                                .toColor()
+                        )
+                        .size(8.dp)
+                )
+            }
+        if (dayDots.size > maxDayDots) {
+            val diff = dayDots.size - maxDayDots
+            Text(
+                modifier = Modifier.padding(start = 2.dp),
+                text = "+$diff",
+                color = Color.Gray,
+                fontSize = 8.sp
+            )
         }
     }
 }
@@ -143,7 +163,11 @@ private fun DayNumber(modifier: Modifier, dayState: DayState<EmptySelectionState
         modifier = modifier,
         text = "${dayState.date.dayOfMonth}",
         fontWeight = weight,
-        color = if (dayState.isCurrentDay) dotRed.toColor() else Color.White
+        color = when {
+            dayState.isCurrentDay -> dotRed.toColor()
+            dayState.isFromCurrentMonth -> Color.White
+            else -> Color.DarkGray
+        }
     )
 }
 

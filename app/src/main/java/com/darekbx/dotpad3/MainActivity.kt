@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -30,10 +31,12 @@ import com.darekbx.dotpad3.ui.list.ListScreen
 import com.darekbx.dotpad3.ui.dots.DotsBoardScreen
 import com.darekbx.dotpad3.ui.dots.ShowDatePicker
 import com.darekbx.dotpad3.ui.dots.ShowTimePicker
+import com.darekbx.dotpad3.ui.settings.SettingsScreen
 import com.darekbx.dotpad3.ui.statistics.StatisticsScreen
 import com.darekbx.dotpad3.viewmodel.DotsViewModel
 import com.darekbx.dotpad3.ui.theme.DotPad3Theme
 import com.darekbx.dotpad3.utils.RequestPermission
+import com.darekbx.dotpad3.viewmodel.BackupViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import org.koin.android.ext.android.inject
 
@@ -42,6 +45,7 @@ import org.koin.android.ext.android.inject
 class MainActivity : ComponentActivity() {
 
     private val dotsViewModel: DotsViewModel by inject()
+    private val backupViewModel: BackupViewModel by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,12 +88,15 @@ class MainActivity : ComponentActivity() {
             composable(NavigationItem.List.route) {
                 List()
             }
+            composable(NavigationItem.Settings.route) {
+                Settings()
+            }
         }
     }
 
     @Composable
     private fun History() {
-        val dots = dotsViewModel.archivedDots().observeAsState(listOf())
+        val dots = dotsViewModel.archivedDots().observeAsState(null)
         HistoryListScreen(
             dots,
             onRestore = { dot -> dotsViewModel.restore(dot) },
@@ -99,8 +106,18 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun List() {
-        val dots = dotsViewModel.activeDots().observeAsState(listOf())
+        val dots = dotsViewModel.activeDots().observeAsState(null)
         ListScreen(dots)
+    }
+
+    @Composable
+    private fun Settings() {
+        SettingsScreen(Modifier,
+            createBackup = { backupViewModel.createBackup() },
+            restoreBackup = { sourceFileUrl -> backupViewModel.restoreBackup(sourceFileUrl) },
+            closeBackupStateDialog = { backupViewModel.resetBackupState() },
+            backupState = backupViewModel.backupState
+        )
     }
 
     @Composable
@@ -113,7 +130,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun Calendar() {
-        val dots = dotsViewModel.activeDots().observeAsState(listOf())
+        val dots = dotsViewModel.activeDots().observeAsState(null)
         CalendarScreen(dots)
     }
 
@@ -183,7 +200,8 @@ class MainActivity : ComponentActivity() {
             NavigationItem.History,
             NavigationItem.Statistics,
             NavigationItem.Calendar,
-            NavigationItem.List
+            NavigationItem.List,
+            NavigationItem.Settings
         )
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
@@ -207,7 +225,7 @@ class MainActivity : ComponentActivity() {
     ) {
         BottomNavigationItem(
             icon = { Icon(painterResource(id = item.iconResId), contentDescription = item.route) },
-            label = { Text(text = stringResource(item.labelResId)) },
+            label = { Text(text = stringResource(item.labelResId), fontSize = 8.sp) },
             alwaysShowLabel = false,
             selected = currentRoute == item.route,
             onClick = {

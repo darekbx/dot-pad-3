@@ -8,4 +8,5 @@ sealed class NavigationItem(var route: String, var labelResId: Int, val iconResI
     object Statistics: NavigationItem("statistics", R.string.statistics, R.drawable.ic_pie_chart)
     object Calendar: NavigationItem("calendar", R.string.calendar, R.drawable.ic_calendar)
     object List: NavigationItem("list", R.string.list, R.drawable.ic_list)
+    object Settings: NavigationItem("settings", R.string.settings, R.drawable.ic_settings)
 }

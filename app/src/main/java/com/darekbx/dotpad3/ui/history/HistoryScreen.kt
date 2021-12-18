@@ -32,7 +32,7 @@ import com.darekbx.dotpad3.utils.TimeUtils
 @ExperimentalFoundationApi
 @Composable
 fun HistoryListScreen(
-    dots: State<List<Dot>>,
+    dots: State<List<Dot>?>,
     onRestore: (Dot) -> Unit,
     onPermanentlyDelete: (Dot) -> Unit
 ) {
@@ -45,16 +45,14 @@ fun HistoryListScreen(
             .padding(bottom = 58.dp)
     ) {
         SearchView(textState)
-        if (dots.value.isNullOrEmpty()) {
-            CommonLoading()
-        } else {
+        dots.value?.let { dotsList ->
             DotList(
-                dots.value,
+                dotsList,
                 searchState = textState,
                 optionsDialogState = dotOptionsDialogState,
                 selectedDotState = selectedDotState
             )
-        }
+        } ?: CommonLoading()
     }
 
     if (dotOptionsDialogState.value) {
@@ -76,7 +74,7 @@ private fun DotOptionsDialog(
 ) {
     val dotShortText = "\"${dot.text.take(20)}...\""
     AlertDialog(
-        backgroundColor = Color.Black,
+        backgroundColor = dialogBackgroud,
         onDismissRequest = { optionsDialogState.value = false },
         confirmButton = {
             Button(onClick = {
