@@ -166,10 +166,10 @@ private fun DotReminder(dot: Dot) {
 }
 
 private fun mapDotSize(dot: Dot) = when (dot.requireSize()) {
-    DotSize.SMALL -> 20.dp
-    DotSize.MEDIUM -> 35.dp
+    DotSize.SMALL -> 30.dp
+    DotSize.MEDIUM -> 45.dp
     DotSize.LARGE -> 60.dp
-    DotSize.HUGE -> 80.dp
+    DotSize.HUGE -> 90.dp
 }
 
 @Preview

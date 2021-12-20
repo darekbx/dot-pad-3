@@ -1,6 +1,8 @@
 package com.darekbx.dotpad3
 
 import android.Manifest
+import android.content.ComponentName
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,7 +16,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -56,6 +57,22 @@ class MainActivity : ComponentActivity() {
                 DisplayContent()
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        notifyDotsCount()
+    }
+
+    /**
+     * Notify dots count to the KLauncher
+     */
+    private fun notifyDotsCount() {
+        sendBroadcast(Intent().apply {
+            action = "com.darekbx.dotpad3.refresh"
+            putExtra("dotsCount", dotsViewModel.activeDotsCount)
+            component = ComponentName("com.klauncher", "com.klauncher.DotsReceiver")
+        })
     }
 
     @Composable

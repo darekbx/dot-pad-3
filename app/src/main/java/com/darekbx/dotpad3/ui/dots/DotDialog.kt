@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -15,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -226,7 +228,7 @@ private fun DotSizes(dotSize: DotSize?, onSizeChange: (DotSize) -> Unit) {
                         .fillMaxWidth()
                         .fillMaxHeight()
                         .padding(top = 14.dp),
-                    text = "${size.size}",
+                    text = "${size.sizeName}",
                     style = Typography.h6.copy(color = LightGrey, textAlign = TextAlign.Center),
                     color = Color.LightGray
                 )
@@ -289,6 +291,9 @@ private fun DotMessage(text: String, onTextChange: (String) -> Unit) {
             .padding(8.dp),
         textStyle = Typography.h6,
         cursorBrush = SolidColor(dotYellow.toColor()),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            capitalization = KeyboardCapitalization.Sentences
+        ),
         decorationBox = { innerTextField ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 if (text.isEmpty()) {

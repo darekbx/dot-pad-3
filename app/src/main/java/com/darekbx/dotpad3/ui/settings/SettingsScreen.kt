@@ -1,11 +1,8 @@
 package com.darekbx.dotpad3.ui.settings
 
 import android.Manifest
-import android.app.Activity.RESULT_OK
-import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

@@ -36,11 +36,11 @@ data class Dot(
     fun requireColor(): DotColor = color ?: throw IllegalStateException("Color is null")
 }
 
-enum class DotSize(val size: Int) {
-    SMALL(5),
-    MEDIUM(6),
-    LARGE(8),
-    HUGE(10)
+enum class DotSize(val size: Int, val sizeName: String) {
+    SMALL(5, "S"),
+    MEDIUM(6, "M"),
+    LARGE(8, "L"),
+    HUGE(10, "XL")
 }
 
 class DotColor(val r: Float, val g: Float, val b: Float) : Serializable {

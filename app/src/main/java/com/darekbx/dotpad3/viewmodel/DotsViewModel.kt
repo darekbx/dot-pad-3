@@ -23,6 +23,8 @@ class DotsViewModel(
     var timePickerState = mutableStateOf(false)
     var deleteReminderState = mutableStateOf(false)
 
+    var activeDotsCount = 0
+
     private var reminderYear: Int = 0
     private var reminderMonth: Int = 0
     private var reminderDay: Int = 0
@@ -30,6 +32,7 @@ class DotsViewModel(
 
     fun activeDots(): LiveData<List<Dot>> =
         Transformations.map(dao.fetchActive()) { dots ->
+            activeDotsCount = dots.size
             dots.map { dto -> dto.toDot() }
         }
 
@@ -81,10 +84,12 @@ class DotsViewModel(
         })
 
     private fun addReminder(dot: Dot) {
+        android.util.Log.v("----------------", "addReminder: $reminderChanged")
         if (reminderChanged && dot.hasReminder()) {
             val (eventId, reminderId) = reminderCreator.addReminder(dot)
             dot.calendarEventId = eventId
             dot.calendarReminderId = reminderId
+            reminderChanged = false
         }
     }
 
@@ -112,7 +117,9 @@ class DotsViewModel(
             deleteReminderState.value = true
             return
         }
+        android.util.Log.v("----------------", "showDatePicker set to true")
         datePickerState.value = true
+        reminderChanged = true
     }
 
     fun removeReminder() {
@@ -141,7 +148,6 @@ class DotsViewModel(
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)
             selectedDot.value?.reminder = timeInMillis
-            reminderChanged = true
         }
     }
 
@@ -158,6 +164,7 @@ class DotsViewModel(
     fun selectDot(dot: Dot) {
         dialogState.value = true
         selectedDot.value = dot
+        reminderChanged = false
     }
 
     fun discardChanges() {
