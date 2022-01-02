@@ -13,8 +13,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
@@ -230,7 +228,7 @@ private fun DotSizes(dotSize: DotSize?, onSizeChange: (DotSize) -> Unit) {
                         .fillMaxWidth()
                         .fillMaxHeight()
                         .padding(top = 14.dp),
-                    text = "${size.sizeName}",
+                    text = size.sizeName,
                     style = Typography.h6.copy(color = LightGrey, textAlign = TextAlign.Center),
                     color = Color.LightGray
                 )
@@ -286,13 +284,11 @@ private fun ReminderInfo(dot: Dot) {
 
 @Composable
 private fun DotMessage(text: String, onTextChange: (String) -> Unit) {
-    val focusRequester = remember { FocusRequester() }
     BasicTextField(
         modifier = Modifier
             .height(168.dp)
             .fillMaxWidth()
-            .padding(8.dp)
-            .focusRequester(focusRequester),
+            .padding(8.dp),
         textStyle = Typography.h6,
         cursorBrush = SolidColor(dotYellow.toColor()),
         keyboardOptions = KeyboardOptions.Default.copy(
@@ -310,11 +306,6 @@ private fun DotMessage(text: String, onTextChange: (String) -> Unit) {
         value = text,
         onValueChange = onTextChange,
     )
-
-    DisposableEffect(Unit) {
-        focusRequester.requestFocus()
-        onDispose {  }
-    }
 }
 
 @Preview
