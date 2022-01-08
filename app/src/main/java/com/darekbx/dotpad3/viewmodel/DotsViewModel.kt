@@ -84,7 +84,6 @@ class DotsViewModel(
         })
 
     private fun addReminder(dot: Dot) {
-        android.util.Log.v("----------------", "addReminder: $reminderChanged")
         if (reminderChanged && dot.hasReminder()) {
             val (eventId, reminderId) = reminderCreator.addReminder(dot)
             dot.calendarEventId = eventId
@@ -117,18 +116,19 @@ class DotsViewModel(
             deleteReminderState.value = true
             return
         }
-        android.util.Log.v("----------------", "showDatePicker set to true")
         datePickerState.value = true
         reminderChanged = true
     }
 
     fun removeReminder() {
         selectedDot.value?.run {
-            reminder = null
-            calendarEventId = null
-            calendarReminderId = null
             runInIO {
                 reminderCreator.removeReminder(this)
+
+                reminder = null
+                calendarEventId = null
+                calendarReminderId = null
+
                 dao.update(toDotDto())
             }
         }
