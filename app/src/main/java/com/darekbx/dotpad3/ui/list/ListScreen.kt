@@ -33,7 +33,7 @@ fun ListScreen(dots: State<List<Dot>?>) {
             .padding(bottom = 58.dp)
     ) {
         dots.value?.let { dotsList ->
-            DotList(dotsList)
+            DotList(dotsList.reversed())
         } ?:  CommonLoading()
     }
 }

@@ -107,7 +107,7 @@ private fun SingleDay(
                 val weekFields: WeekFields = WeekFields.of(Locale.getDefault())
                 Text(
                     modifier = Modifier.align(Alignment.BottomCenter),
-                    text = "W${dayState.date.get(weekFields.weekOfYear())}",
+                    text = "W${dayState.date.get(weekFields.weekOfYear()) - 1}",
                     color = Color.Gray,
                     fontSize = 10.sp
                 )
