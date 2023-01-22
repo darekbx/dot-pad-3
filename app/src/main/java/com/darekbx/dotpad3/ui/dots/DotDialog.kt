@@ -13,6 +13,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
@@ -284,10 +286,12 @@ private fun ReminderInfo(dot: Dot) {
 
 @Composable
 private fun DotMessage(text: String, onTextChange: (String) -> Unit) {
+    val focusRequester = remember { FocusRequester() }
     BasicTextField(
         modifier = Modifier
             .height(168.dp)
             .fillMaxWidth()
+            .focusRequester(focusRequester)
             .padding(8.dp),
         textStyle = Typography.h6,
         cursorBrush = SolidColor(dotYellow.toColor()),
@@ -306,6 +310,11 @@ private fun DotMessage(text: String, onTextChange: (String) -> Unit) {
         value = text,
         onValueChange = onTextChange,
     )
+
+    DisposableEffect(Unit) {
+        focusRequester.requestFocus()
+        onDispose { }
+    }
 }
 
 @Preview

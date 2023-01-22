@@ -1,9 +1,13 @@
 package com.darekbx.dotpad3
 
 import android.Manifest
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Intent
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
@@ -39,12 +43,17 @@ import com.darekbx.dotpad3.viewmodel.DotsViewModel
 import com.darekbx.dotpad3.ui.theme.DotPad3Theme
 import com.darekbx.dotpad3.utils.RequestPermission
 import com.darekbx.dotpad3.viewmodel.BackupViewModel
+import com.darekbx.dotpad3.widget.CountWidget
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import org.koin.android.ext.android.inject
 
 @ExperimentalFoundationApi
 @ExperimentalPermissionsApi
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        var LAST_COUNT = 0
+    }
 
     private val dotsViewModel: DotsViewModel by inject()
     private val backupViewModel: BackupViewModel by inject()
@@ -61,6 +70,17 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+
+        val widgetManager = AppWidgetManager.getInstance(this)
+        val widgetComponentName = ComponentName(this, CountWidget::class.java)
+        val widgetIds = widgetManager.getAppWidgetIds(widgetComponentName)
+
+        val widgetUpdateIntent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
+            component = widgetComponentName
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIds)
+        }
+        // send the intent
+        sendBroadcast(widgetUpdateIntent)
         notifyDotsCount()
     }
 
@@ -155,6 +175,9 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun DotsBoard() {
         val dots = dotsViewModel.activeDots().observeAsState(listOf())
+        if (dots.value.isNotEmpty()) {
+            LAST_COUNT = dots.value.size
+        }
         DotsBoardScreen(
             items = dots,
             selectedDot = dotsViewModel.selectedDot.value,
