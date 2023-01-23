@@ -67,6 +67,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+        notifyDotsCount()
+    }
+
+    /**
+     * Notify dots count to the KLauncher
+     */
+    private fun notifyDotsCount() {
+        LAST_COUNT = dotsViewModel.activeDotsCount
 
         val widgetManager = AppWidgetManager.getInstance(this)
         val widgetComponentName = ComponentName(this, CountWidget::class.java)
@@ -76,15 +84,9 @@ class MainActivity : ComponentActivity() {
             component = widgetComponentName
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIds)
         }
-        // send the intent
-        sendBroadcast(widgetUpdateIntent)
-        notifyDotsCount()
-    }
 
-    /**
-     * Notify dots count to the KLauncher
-     */
-    private fun notifyDotsCount() {
+        sendBroadcast(widgetUpdateIntent)
+
         sendBroadcast(Intent().apply {
             action = "com.darekbx.dotpad3.refresh"
             putExtra("dotsCount", dotsViewModel.activeDotsCount)
@@ -172,9 +174,6 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun DotsBoard() {
         val dots = dotsViewModel.activeDots().observeAsState(listOf())
-        if (dots.value.isNotEmpty()) {
-            LAST_COUNT = dots.value.size
-        }
         DotsBoardScreen(
             items = dots,
             selectedDot = dotsViewModel.selectedDot.value,
